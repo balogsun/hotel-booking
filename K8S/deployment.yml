@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hotel-deployment
+spec:
+  replicas: 1  # Number of desired replicas
+  selector:
+    matchLabels:
+      app: hotel
+  template:
+    metadata:
+      labels:
+        app: hotel
+    spec:
+      containers:
+      - name: hotel
+        image: balogsen/hotel:latest
+        ports:
+        - containerPort: 3000  # Port your application listens on
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hotel-service
+spec:
+  selector:
+    app: hotel
+  ports:
+    - protocol: TCP
+      port: 80  # Port exposed by the service externally (outside the cluster)
+      targetPort: 3000  # Port your application listens on inside the pods
+  type: LoadBalancer
