@@ -1,4 +1,4 @@
-name: Hotel Pipeline.
+name: Hotel Pipeline
 
 on:
   push:
@@ -15,32 +15,36 @@ jobs:
         with:
           repository: balogsun/hotel-booking
 
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-cache
+          restore-keys: |
+            ${{ runner.os }}-sonar-cache
+
+      - name: Set up SonarQube
+        uses: sonarsource/sonarcloud-github-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Run SonarQube Scan
+        run: |
+          echo "Running SonarQube Scan"
+          mvn clean install sonar:sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub Actions
+
       - name: Docker login
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: Build and push uber clone image
-#        working-directory: src/adservice
+      - name: Build hotel booking image
         run: |
           docker build -t balogsen/hotel:latest .
-          docker push balogsen/hotel:latest
           docker rmi balogsen/hotel:latest
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ca-central-1
-
-      - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig --region ca-central-1 --name pjct-cluster
-
-      - name: Deploy to EKS
-        run: |
-          kubectl apply -f K8S/deployment.yml
