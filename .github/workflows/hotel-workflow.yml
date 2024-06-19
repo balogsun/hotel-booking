@@ -32,7 +32,7 @@ jobs:
       - name: Set up SonarQube
         uses: sonarsource/sonarcloud-github-action@v1
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run SonarQube Scan
@@ -40,7 +40,7 @@ jobs:
           echo "Running SonarQube Scan"
           mvn clean install sonar:sonar
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub Actions
 
       - name: Docker login
