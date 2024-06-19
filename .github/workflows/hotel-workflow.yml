@@ -34,7 +34,7 @@ jobs:
 
       # Step 4: Set up and run SonarQube Scan
       - name: Set up and run SonarQube
-        uses: sonarsource/sonarcloud-github-action@v3
+        uses: sonarsource/sonarcloud-github-action@v2
         with:
           args: >
             -Dsonar.projectKey=sonarkey
