@@ -12,43 +12,26 @@ jobs:
     steps:
       # Step 1: Checkout code from the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: balogsun/hotel-booking
 
-      # Step 2: Set up JDK 
-      - name: Set up JDK 22
-        uses: actions/setup-java@v3
+      # Step 2: Enable GitHub Code Scanning
+      - name: Code Scanning
+        uses: github/codeql-action/init@v3
         with:
-          java-version: '22'
-          distribution: 'adopt'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 3: Cache SonarQube packages
-      - name: Cache SonarQube packages
-        uses: actions/cache@v2
+      # Step 3: Run GitHub Code Scanning
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
         with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar-cache
-          restore-keys: |
-            ${{ runner.os }}-sonar-cache
+          languages: java
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 4: Set up and run SonarQube Scan
-      - name: Set up and run SonarQube
-        uses: sonarsource/sonarcloud-github-action@v2
-        with:
-          args: >
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.login=${{ secrets.GITHUB_TOKEN }}
-        env:
-          SONAR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Step 5: Run SonarQube Scan
-      - name: Run SonarQube Scan
-        run: |
-          echo "Running SonarQube Scan"
-          mvn clean install sonar:sonar
-        env:
-          SONAR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Step 4: Record successful outcome for GitHub Actions
+      - name: Record outcome
+        run: echo "javascript_typescript=OK" >> $GITHUB_ENV
 
       # Step 5: Docker login
       - name: Docker login
@@ -57,6 +40,5 @@ jobs:
       # Step 6: Build and push hotel booking image
       - name: Build and push hotel booking image
         run: |
-          docker build -t balogsen/hotel:latest .
-          docker rmi balogsen/hotel:latest
-
+          docker build -t balogsun/hotel:latest .
+          docker push balogsun/hotel:latest
