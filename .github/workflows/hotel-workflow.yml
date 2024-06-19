@@ -9,6 +9,11 @@ jobs:
   build-analyze-deploy:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        language: [javascript-typescript]
+        build-mode: [none]
+
     steps:
       # Step 1: Checkout code from the repository
       - name: Checkout code
@@ -16,52 +21,37 @@ jobs:
         with:
           repository: balogsun/hotel-booking
 
-      # Step 2: Analyze (${matrix.language})
-      - name: Analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        strategy:
-          matrix:
-            language: [javascript, typescript]
-            build-mode: [none]
-        permissions:
-          security-events: write
-          packages: read
-          actions: read
-          contents: read
-        steps:
-          # Step 3: Initialize CodeQL
-          - name: Initialize CodeQL
-            uses: github/codeql-action/init@v3
-            with:
-              languages: ${{ matrix.language }}
-              build-mode: ${{ matrix.build-mode }}
+      # Step 2: Initialize CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-          # Step 4: Check for manual build mode
-          - if: matrix.build-mode == 'manual'
-            name: Manual Build Mode
-            shell: bash
-            run: |
-              echo 'If you are using a "manual" build mode for one or more of the languages you are analyzing, replace this with the commands to build your code, for example:'
-              echo '  make bootstrap'
-              echo '  make release'
-              exit 1
+      # Step 3: Check for manual build mode
+      - if: matrix.build-mode == 'manual'
+        name: Manual Build Mode
+        run: |
+          echo 'If you are using a "manual" build mode for one or more of the languages you are analyzing, replace this with the commands to build your code, for example:'
+          echo '  make bootstrap'
+          echo '  make release'
+          exit 1
 
-          # Step 5: Perform CodeQL Analysis
-          - name: Perform CodeQL Analysis
-            uses: github/codeql-action/analyze@v3
-            with:
-              category: "/language:${{ matrix.language }}"
+      # Step 4: Perform CodeQL Analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
 
-          # Step 6: Record successful outcome for GitHub Actions
-          - name: Record outcome
-            run: echo "${{ matrix.language }}=OK" >> $GITHUB_ENV
+      # Step 5: Record successful outcome for GitHub Actions
+      - name: Record outcome
+        run: echo "javascript_typescript=OK" >> $GITHUB_ENV
 
-      # Step 7: Docker login
+      # Step 6: Docker login
       - name: Docker login
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      # Step 8: Build and push hotel booking image
+      # Step 7: Build and push hotel booking image
       - name: Build and push hotel booking image
         run: |
           docker build -t balogsun/hotel:latest .
