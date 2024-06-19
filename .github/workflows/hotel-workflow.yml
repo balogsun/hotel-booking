@@ -45,18 +45,10 @@ jobs:
         with:
           category: "/language:${{ matrix.language }}"
 
-  build-and-deploy:
-    name: Build and Deploy Hotel Booking
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Docker login
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
       - name: Build and push hotel booking image
         run: |
-          docker build -t balogsun/hotel:latest .
-          docker push balogsun/hotel:latest
+          docker build -t balogsen/hotel:latest .
+          docker push balogsen/hotel:latest
