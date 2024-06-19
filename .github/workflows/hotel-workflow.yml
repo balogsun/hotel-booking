@@ -65,7 +65,7 @@ jobs:
  
       - name: Convert Trivy JSON to HTML
         run: |
-          jq -r '.[].Vulnerabilities[] | "<tr><td>\(.Severity)</td><td>\(.PkgName)</td><td>\(.InstalledVersion)</td><td>\(.FixedVersion)</td><td>\(.Title)</td></tr>"' trivy_report.json > trivy_report.html
+          jq -r '.[0].Vulnerabilities[] | "<tr><td>\(.Severity)</td><td>\(.PkgName)</td><td>\(.InstalledVersion)</td><td>\(.FixedVersion)</td><td>\(.Title)</td></tr>"' trivy_report.json > trivy_report.html
 
       - name: Save Trivy scan results as artifact
         uses: actions/upload-artifact@v4
