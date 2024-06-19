@@ -62,29 +62,17 @@ jobs:
       - name: Scan Docker image with Trivy
         run: |
           trivy image -f json -o trivy_report.json balogsen/hotel:latest
- 
-      - name: Convert Trivy JSON to Markdown
+
+      - name: Convert Trivy JSON to human-readable format
         run: |
-          echo "| Library | Vulnerability | Severity | Status | Installed Version | Fixed Version | Title |" > trivy_report.md
-          echo "|---------|----------------|----------|--------|-------------------|---------------|-------|" >> trivy_report.md
-          jq -r '.[0].Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.PrimaryURL) | \(.InstalledVersion) | \(.FixedVersion) | \(.Title) |"' trivy_report.json >> trivy_report.md
+          trivy image -f table balogsen/hotel:latest > trivy_report.txt
 
       - name: Save Trivy scan results as artifact
         uses: actions/upload-artifact@v4
         with:
           name: trivy-scan-results
-          path: trivy_report.html
+          path: trivy_report.txt
 
-#      - name: Convert Trivy JSON to human-readable format
-#        run: |
-#          trivy image -f table balogsen/hotel:latest > trivy_report.txt
-#
-#      - name: Save Trivy scan results as artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: trivy-scan-results
-#          path: trivy_report.txt
-#
 #     - name: Push hotel booking image
 #       run: |
 #         docker push balogsen/hotel:latest
