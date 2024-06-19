@@ -63,9 +63,11 @@ jobs:
         run: |
           trivy image -f json -o trivy_report.json balogsen/hotel:latest
  
-      - name: Convert Trivy JSON to HTML
+      - name: Convert Trivy JSON to Markdown
         run: |
-          jq -r '.[0].Vulnerabilities[] | "<tr><td>\(.Severity)</td><td>\(.PkgName)</td><td>\(.InstalledVersion)</td><td>\(.FixedVersion)</td><td>\(.Title)</td></tr>"' trivy_report.json > trivy_report.html
+          echo "| Library | Vulnerability | Severity | Status | Installed Version | Fixed Version | Title |" > trivy_report.md
+          echo "|---------|----------------|----------|--------|-------------------|---------------|-------|" >> trivy_report.md
+          jq -r '.[0].Vulnerabilities[] | "| \(.PkgName) | \(.VulnerabilityID) | \(.Severity) | \(.PrimaryURL) | \(.InstalledVersion) | \(.FixedVersion) | \(.Title) |"' trivy_report.json >> trivy_report.md
 
       - name: Save Trivy scan results as artifact
         uses: actions/upload-artifact@v4
