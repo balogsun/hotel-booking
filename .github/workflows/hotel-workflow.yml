@@ -7,7 +7,7 @@ on:
 
 jobs:
   codeql-analysis:
-    name: CodeQL Analysis
+    name: Build-CodeQL-and-deploy hotel
     runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
     timeout-minutes: ${{ matrix.language == 'swift' && 120 || 360 }}
     permissions:
@@ -44,11 +44,25 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+#CodeQL scanned 20 out of 20 JavaScript files in this invocation. Check the status page for overall coverage information: https://github.com/balogsun/hotel-booking/security/code-scanning/tools/CodeQL/status/
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy
 
       - name: Docker login
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: Build and push hotel booking image
+      - name: Build hotel booking image
         run: |
-          docker build -t balogsen/hotel:latest .
+          docker build -t balogsen/hotel:latest
+
+      - name: Scan Docker image with Trivy
+        run: |
+          trivy image balogsen/hotel:latest
+
+      - name: Build hotel booking image
+        run: |
           docker push balogsen/hotel:latest
