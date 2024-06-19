@@ -6,52 +6,56 @@ on:
       - main
 
 jobs:
-  build-analyze-deploy:
-    runs-on: ubuntu-latest
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ matrix.language == 'swift' && 120 || 360 }}
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
 
     strategy:
+      fail-fast: false
       matrix:
-        language: [javascript-typescript]
-        build-mode: [none]
+        language:
+          - javascript-typescript
+        build-mode:
+          - none
 
     steps:
-      # Step 1: Checkout code from the repository
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          repository: balogsun/hotel-booking
 
-      # Step 2: Initialize CodeQL
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
-      # Step 3: Check for manual build mode
       - if: matrix.build-mode == 'manual'
-        name: Manual Build Mode
+        name: Build Project
         run: |
-          echo 'If you are using a "manual" build mode for one or more of the languages you are analyzing, replace this with the commands to build your code, for example:'
-          echo '  make bootstrap'
-          echo '  make release'
+          echo 'If manual build mode is set, replace this with your build commands.'
           exit 1
 
-      # Step 4: Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:${{ matrix.language }}"
 
-      # Step 5: Record successful outcome for GitHub Actions
-      - name: Record outcome
-        run: echo "javascript_typescript=OK" >> $GITHUB_ENV
+  build-and-deploy:
+    name: Build and Deploy Hotel Booking
+    runs-on: ubuntu-latest
 
-      # Step 6: Docker login
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Docker login
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      # Step 7: Build and push hotel booking image
       - name: Build and push hotel booking image
         run: |
           docker build -t balogsun/hotel:latest .
