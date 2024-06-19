@@ -37,8 +37,6 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.projectKey=sonarkey
-            -Dsonar.organization=seunb-org
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.login=${{ secrets.GITHUB_TOKEN }}
         env:
