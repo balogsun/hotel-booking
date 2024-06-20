@@ -46,8 +46,8 @@ jobs:
           category: "/language:${{ matrix.language }}"
 #CodeQL scanned 20 out of 20 JavaScript files in this invocation. Check the status page for overall coverage information: https://github.com/balogsun/hotel-booking/security/code-scanning/tools/CodeQL/status/
 
-     - name: Install Trivy
-       run: |
+      - name: Install Trivy
+        run: |
          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
          sudo apt-get update && sudo apt-get install trivy
@@ -74,27 +74,27 @@ jobs:
           name: trivy-scan-results
           path: trivy_report.txt
 
-    - name: Push hotel booking image
-      run: |
+      - name: Push hotel booking image
+        run: |
          docker push balogsen/hotel:latest
          docker rmi balogsen/hotel:latest
 
-     - name: Set up kubectl
-       uses: azure/setup-kubectl@v3
-       with:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
          version: 'latest'
 
-     - name: Configure AWS credentials
-       uses: aws-actions/configure-aws-credentials@v3
-       with:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: ca-central-1
 
- #    - name: Update kubeconfig for EKS
- #      run: |
- #        aws eks update-kubeconfig --region ca-central-1 --name 
- #
- #    - name: Deploy to EKS
- #      run: |
- #        kubectl apply -f K8S/deployment.yml
+#      - name: Update kubeconfig for EKS
+#        run: |
+#         aws eks update-kubeconfig --region ca-central-1 --name 
+# 
+#      - name: Deploy to EKS
+#        run: |
+#         kubectl apply -f K8S/deployment.yml
