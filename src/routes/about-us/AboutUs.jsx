@@ -57,7 +57,7 @@ const AboutUs = () => {
           className="text-brand hover:underline"
           href="mailto:info@staybooker.com"
         >
-          info@staybooker.com
+          seunbalogun@gmail.com
         </a>
         . We're here to help!
       </p>
