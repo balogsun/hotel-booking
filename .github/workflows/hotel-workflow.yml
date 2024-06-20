@@ -28,69 +28,73 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-#      - name: Initialize CodeQL
-#        uses: github/codeql-action/init@v3
-#        with:
-#          languages: ${{ matrix.language }}
-#          build-mode: ${{ matrix.build-mode }}
-#
-#      - if: matrix.build-mode == 'manual'
-#        name: Build Project
-#        run: |
-#          echo 'If manual build mode is set, replace this with your build commands.'
-#          exit 1
-#
-#      - name: Perform CodeQL Analysis
-#        uses: github/codeql-action/analyze@v3
-#        with:
-#          category: "/language:${{ matrix.language }}"
-##CodeQL scanned 20 out of 20 JavaScript files in this invocation. Check the status page for overall coverage information: https://github.com/balogsun/hotel-booking/security/code-scanning/tools/CodeQL/status/
-#
-#     - name: Install Trivy
-#       run: |
-#         wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-#         echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-#         sudo apt-get update && sudo apt-get install trivy
-
- #     - name: Docker login
- #       run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
- #
-      - name: Log in to GitHub Container Registry
-        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin      
-
- #     - name: Build hotel booking image
- #       run: |
- #         docker build -t balogsen/hotel:latest .
-
-      - name: Build and push Docker image
-        run: |
-          docker build -t ghcr.io/balogsun/hotel:latest .
-          docker push ghcr.io/balogsun/hotel:latest
-
- #     - name: Scan Docker image with Trivy
- #       run: |
- #         trivy image -f json -o trivy_report.json balogsen/hotel:latest
- 
- #     - name: Convert Trivy JSON to human-readable format
- #       run: |
- #         trivy image -f table balogsen/hotel:latest > trivy_report.txt
- 
- #     - name: Save Trivy scan results as artifact
- #       uses: actions/upload-artifact@v4
- #       with:
- #         name: trivy-scan-results
- #         path: trivy_report.txt
- 
-      - name: GitHub Container Scanning
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: dockerfile
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
+      - if: matrix.build-mode == 'manual'
+        name: Build Project
+        run: |
+          echo 'If manual build mode is set, replace this with your build commands.'
+          exit 1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
         with:
-          sarif_file: ${{ github.workspace }}/codeql-sarif-results.sarif
+          category: "/language:${{ matrix.language }}"
+#CodeQL scanned 20 out of 20 JavaScript files in this invocation. Check the status page for overall coverage information: https://github.com/balogsun/hotel-booking/security/code-scanning/tools/CodeQL/status/
 
-#    - name: Push hotel booking image
-#      run: |
-#         docker push balogsen/hotel:latest
+     - name: Install Trivy
+       run: |
+         wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+         echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+         sudo apt-get update && sudo apt-get install trivy
+
+      - name: Docker login
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin     
+
+      - name: Build hotel booking image
+        run: |
+          docker build -t balogsen/hotel:latest .
+ #        working-directory: src/adservice
+
+      - name: Scan Docker image with Trivy
+        run: |
+          trivy image -f json -o trivy_report.json balogsen/hotel:latest
+ 
+      - name: Convert Trivy JSON to human-readable format
+        run: |
+          trivy image -f table balogsen/hotel:latest > trivy_report.txt
+ 
+      - name: Save Trivy scan results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy_report.txt
+
+    - name: Push hotel booking image
+      run: |
+         docker push balogsen/hotel:latest
+         docker rmi balogsen/hotel:latest
+
+     - name: Set up kubectl
+       uses: azure/setup-kubectl@v3
+       with:
+         version: 'latest'
+
+     - name: Configure AWS credentials
+       uses: aws-actions/configure-aws-credentials@v3
+       with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: ca-central-1
+
+ #    - name: Update kubeconfig for EKS
+ #      run: |
+ #        aws eks update-kubeconfig --region ca-central-1 --name 
+ #
+ #    - name: Deploy to EKS
+ #      run: |
+ #        kubectl apply -f K8S/deployment.yml
