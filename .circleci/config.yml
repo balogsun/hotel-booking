@@ -25,27 +25,6 @@ jobs:
           command: docker build -t balogsen/hotel:latest .
 
       - run:
-          name: Install Trivy
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-            sudo apt-get update && sudo apt-get install trivy
-
-      - run:
-          name: Scan Docker image with Trivy
-          command: trivy image -f json -o trivy_report.json balogsen/hotel:latest
-
-      - run:
-          name: Convert Trivy JSON to human-readable format
-          command: trivy image -f table balogsen/hotel:latest > trivy_report.txt
-
-      - store_artifacts:
-          path: trivy_report.txt
-          destination: trivy-scan-results
-
-      - run:
           name: Push hotel booking image
           command: |
             docker push balogsen/hotel:latest
