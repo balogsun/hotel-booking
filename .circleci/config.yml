@@ -1,31 +1,58 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/executor-intro/ & https://circleci.com/docs/configuration-reference/#executor-job
+executors:
+  default:
     docker:
-      # Specify the version you desire here
-      # See: https://circleci.com/developer/images/image/cimg/base
-      - image: cimg/base:current
+      - image: circleci/node:14
+    working_directory: ~/project
 
-    # Add steps to the job
-    # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
+jobs:
+  build:
+    executor: default
     steps:
-      # Checkout the code as the first step.
       - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
+      - run:
+          name: Install Trivy
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update && sudo apt-get install trivy
+
+      - setup_remote_docker:
+          version: 20.10.7
+
+      - run:
+          name: Docker login
+          command: |
+            echo $DOCKER_PASS| docker login -u $DOCKER_USER--password-stdin
+
+      - run:
+          name: Build hotel booking image
+          command: docker build -t balogsen/hotel:latest .
+
+      - run:
+          name: Scan Docker image with Trivy
+          command: trivy image -f json -o trivy_report.json balogsen/hotel:latest
+
+      - run:
+          name: Convert Trivy JSON to human-readable format
+          command: trivy image -f table balogsen/hotel:latest > trivy_report.txt
+
+      - store_artifacts:
+          path: trivy_report.txt
+          destination: trivy-scan-results
+
+      - run:
+          name: Push hotel booking image
+          command: |
+            docker push balogsen/hotel:latest
+            docker rmi balogsen/hotel:latest
+
 workflows:
-  say-hello-workflow: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  version: 2
+  build_and_deploy:
     jobs:
-      - say-hello
+      - build
