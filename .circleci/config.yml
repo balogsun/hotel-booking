@@ -13,12 +13,12 @@ jobs:
       - checkout
 
       - setup_remote_docker:
-          version: 20.10.18  # Use a supported and stable version
+          version: default  # Use a supported and stable version
 
       - run:
           name: Docker login
           command: |
-            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
       - run:
           name: Build hotel booking image
