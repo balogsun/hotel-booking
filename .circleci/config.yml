@@ -8,7 +8,7 @@ executors:
 
   security:
     docker:
-      - image: circleci/python:3.9  # Use a Python image to download and run Grype
+      - image: aquasec/trivy:latest  # Use the latest Trivy Docker image
     working_directory: ~/project
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
           command: npm install
 
       - run:
-          name: Run npm audit  (ignore failures)
+          name: Run npm audit (ignore failures)
           command: npm audit --audit-level=high || true
 
   build:
@@ -48,21 +48,18 @@ jobs:
       - checkout
 
       - run:
-          name: Install Grype
-          command: |
-            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.69.0
-
-      - run:
-          name: Add Grype to PATH
-          command: |
-            export PATH=$PATH:/usr/local/bin
-            echo "PATH updated to include Grype: $PATH"
-
-      - run:
           name: Scan Docker Image for Vulnerabilities
           command: |
-            grype balogsen/hotel:v0
+            trivy image --severity HIGH,CRITICAL balogsen/hotel:v0 || true
+
+      - run:
+          name: Push Docker Image
+          command: |
             docker push balogsen/hotel:v0
+
+      - run:
+          name: Remove Docker Image
+          command: |
             docker rmi balogsen/hotel:v0
 
 workflows:
