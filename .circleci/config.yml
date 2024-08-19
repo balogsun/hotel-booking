@@ -27,8 +27,8 @@ jobs:
       - run:
           name: Push hotel booking image
           command: |
-            docker push balogsen/hotel:latest
-            docker rmi balogsen/hotel:latest
+            docker push balogsen/hotel:v1
+            docker rmi balogsen/hotel:v1
 
 workflows:
   version: 2
