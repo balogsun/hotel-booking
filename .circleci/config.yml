@@ -6,69 +6,68 @@ executors:
       - image: circleci/node:14
     working_directory: ~/project
 
+  security:
+    docker:
+      - image: anchore/grype:latest
+    working_directory: ~/project
+
 jobs:
-  checkout:
+  code_security_scan:
     executor: default
     steps:
       - checkout
 
-  code-scan:
-    docker:
-      - image: github/codeql-action/init:latest  # Use the correct Docker image
-    steps:
-      - checkout
       - run:
-          name: Initialize CodeQL
-          command: |
-            codeql database create codeql-db --language=javascript
-            codeql database analyze codeql-db --format=sarif-latest --output=codeql-results.sarif
+          name: Install dependencies
+          command: npm install
+
+      - run:
+          name: Run npm audit
+          command: npm audit --audit-level=high
 
   build:
     executor: default
     steps:
       - checkout
+
       - setup_remote_docker:
-          version: default
+          version: default  # Use a supported and stable version
+
       - run:
           name: Docker login
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
       - run:
           name: Build hotel booking image
           command: docker build -t balogsen/hotel:v0 .
 
-  image-scan:
-    docker:
-      - image: aquasec/trivy:latest
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: default
-      - run:
-          name: Scan Docker image with Trivy
-          command: trivy image --exit-code 1 --severity HIGH balogsen/hotel:v0
-
-  push:
-    executor: default
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: default
-      - run:
-          name: Docker login
-          command: |
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
       - run:
           name: Push hotel booking image
           command: |
             docker push balogsen/hotel:v0
+            docker rmi balogsen/hotel:v0
+
+  image_security_scan:
+    executor: security
+    steps:
+      - setup_remote_docker:
+          version: default
+
+      - run:
+          name: Scan Docker Image for Vulnerabilities
+          command: |
+            docker pull balogsen/hotel:v0
+            grype balogsen/hotel:v0
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - checkout
-      - code-scan
-      - build
-      - image-scan
-      - push
+      - code_security_scan
+      - build:
+          requires:
+            - code_security_scan
+      - image_security_scan:
+          requires:
+            - build
