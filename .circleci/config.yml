@@ -22,7 +22,7 @@ jobs:
 
       - run:
           name: Build hotel booking image
-          command: docker build -t balogsen/hotel:latest .
+          command: docker build -t balogsen/hotel:v1 .
 
       - run:
           name: Push hotel booking image
