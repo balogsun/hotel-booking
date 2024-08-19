@@ -35,7 +35,7 @@ jobs:
 
       - run:
           name: Build Docker Image
-          command: docker build -t balogsen/hotel:v0 .
+          command: docker build -t balogsen/hotel:v2 .
 
       - run:
           name: Install Trivy
@@ -50,11 +50,11 @@ jobs:
 
       - run:
           name: Push Docker Image
-          command: docker push balogsen/hotel:v0
+          command: docker push balogsen/hotel:v2
 
       - run:
           name: Remove Docker Image
-          command: docker rmi balogsen/hotel:v0
+          command: docker rmi balogsen/hotel:v2
 
 workflows:
   version: 2
