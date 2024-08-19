@@ -18,10 +18,6 @@ jobs:
       - checkout
 
       - run:
-          name: Upgrade npm to Latest Version
-          command: npm install -g npm@latest
-
-      - run:
           name: Install dependencies
           command: npm install
 
