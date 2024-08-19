@@ -3,12 +3,7 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: circleci/node:14
-    working_directory: ~/project
-
-  security:
-    docker:
-      - image: aquasec/trivy:latest  # Use the latest Trivy Docker image
+      - image: cimg/node:22.6.0
     working_directory: ~/project
 
 jobs:
@@ -25,13 +20,13 @@ jobs:
           name: Run npm audit (ignore failures)
           command: npm audit --audit-level=high || true
 
-  build:
+  build_and_scan:
     executor: default
     steps:
       - checkout
 
       - setup_remote_docker:
-          version: default  # Use a supported and stable version
+          version: default  # Ensure Docker is available
 
       - run:
           name: Docker login
@@ -39,13 +34,13 @@ jobs:
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
       - run:
-          name: Build hotel booking image
+          name: Build Docker Image
           command: docker build -t balogsen/hotel:v0 .
 
-  image_security_scan:
-    executor: security
-    steps:
-      - checkout
+      - run:
+          name: Install Trivy
+          command: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
       - run:
           name: Scan Docker Image for Vulnerabilities
@@ -54,22 +49,17 @@ jobs:
 
       - run:
           name: Push Docker Image
-          command: |
-            docker push balogsen/hotel:v0
+          command: docker push balogsen/hotel:v0
 
       - run:
           name: Remove Docker Image
-          command: |
-            docker rmi balogsen/hotel:v0
+          command: docker rmi balogsen/hotel:v0
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
       - code_security_scan
-      - build:
+      - build_and_scan:
           requires:
             - code_security_scan
-      - image_security_scan:
-          requires:
-            - build
