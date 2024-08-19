@@ -13,7 +13,18 @@ jobs:
       - checkout
 
       - setup_remote_docker:
-          version: default  # Use a supported and stable version
+          version: default
+		  
+  codeql-analysis:
+    docker:
+      - image: github/codeql-action/init@v3
+    steps:
+      - checkout
+      - run:
+          name: Initialize CodeQL
+          command: |
+            codeql database create codeql-db --language=javascript
+            codeql database analyze codeql-db --format=sarif-latest --output=codeql-results.sarif
 
       - run:
           name: Docker login
@@ -22,16 +33,28 @@ jobs:
 
       - run:
           name: Build hotel booking image
-          command: docker build -t balogsen/hotel:v1 .
+          command: docker build -t balogsen/hotel:v0 .
+
+  trivy-scan:
+    docker:
+      - image: aquasec/trivy:latest
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: default
+      - run:
+          name: Scan Docker image with Trivy
+          command: trivy image --exit-code 1 --severity HIGH balogsen/hotel:v0
 
       - run:
           name: Push hotel booking image
           command: |
-            docker push balogsen/hotel:v1
-            docker rmi balogsen/hotel:v1
+            docker push balogsen/hotel:v0
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
       - build
+      - codeql-analysis
+      - trivy-scan
