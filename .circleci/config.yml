@@ -53,6 +53,12 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.69.0
 
       - run:
+          name: Add Grype to PATH
+          command: |
+            export PATH=$PATH:/usr/bin
+            echo "PATH updated to include Grype: $PATH"
+
+      - run:
           name: Scan Docker Image for Vulnerabilities
           command: |
             grype balogsen/hotel:v0
