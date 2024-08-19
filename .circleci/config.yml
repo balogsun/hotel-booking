@@ -8,7 +8,7 @@ executors:
 
   security:
     docker:
-      - image: anchore/grype:latest
+      - image: circleci/python:3.9  # Use a Python image to download and run Grype
     working_directory: ~/project
 
 jobs:
@@ -45,8 +45,12 @@ jobs:
   image_security_scan:
     executor: security
     steps:
-      - setup_remote_docker:
-          version: default
+      - checkout
+
+      - run:
+          name: Install Grype
+          command: |
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.69.0
 
       - run:
           name: Scan Docker Image for Vulnerabilities
