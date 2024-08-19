@@ -158,11 +158,8 @@ const Home = () => {
         <PopularLocations popularDestinationsData={popularDestinationsData} />
         <div className="my-8">
           <h2 className="text-3xl font-medium text-slate-700 text-center my-2">
-            Handpicked nearby hotels for you
+            Recommended Hotels Nearby [Top Hotel Dem Wey Dey for Your Area]
           </h2>
-          <h3>
-            Make una come see nearby hotels wey we don handpick for you all
-          </h3>
           <ResultsContainer
             hotelsResults={hotelsResults}
             enableFilters={false}
