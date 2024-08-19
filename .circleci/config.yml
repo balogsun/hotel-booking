@@ -7,15 +7,12 @@ executors:
     working_directory: ~/project
 
 jobs:
-  build:
+  checkout:
     executor: default
     steps:
       - checkout
 
-      - setup_remote_docker:
-          version: default
-		  
-  codeql-analysis:
+  code-scan:
     docker:
       - image: github/codeql-action/init@v3
     steps:
@@ -26,16 +23,21 @@ jobs:
             codeql database create codeql-db --language=javascript
             codeql database analyze codeql-db --format=sarif-latest --output=codeql-results.sarif
 
+  build:
+    executor: default
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: default
       - run:
           name: Docker login
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
       - run:
           name: Build hotel booking image
           command: docker build -t balogsen/hotel:v0 .
 
-  trivy-scan:
+  image-scan:
     docker:
       - image: aquasec/trivy:latest
     steps:
@@ -46,6 +48,16 @@ jobs:
           name: Scan Docker image with Trivy
           command: trivy image --exit-code 1 --severity HIGH balogsen/hotel:v0
 
+  push:
+    executor: default
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: default
+      - run:
+          name: Docker login
+          command: |
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
       - run:
           name: Push hotel booking image
           command: |
@@ -55,6 +67,8 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
+      - checkout
+      - code-scan
       - build
-      - codeql-analysis
-      - trivy-scan
+      - image-scan
+      - push
