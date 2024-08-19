@@ -160,8 +160,8 @@ const Home = () => {
           <h2 className="text-3xl font-medium text-slate-700 text-center my-2">
             Handpicked nearby hotels for you
           </h2>
-          <h3 className="text-3xl font-medium text-slate-700 text-center my-2">
-            Make una see nearby hotels wey we don handpick for you
+          <h3>
+            Make una come see nearby hotels wey we don handpick for you all
           </h3>
           <ResultsContainer
             hotelsResults={hotelsResults}
