@@ -55,7 +55,7 @@ jobs:
       - run:
           name: Add Grype to PATH
           command: |
-            export PATH=$PATH:/usr/bin
+            export PATH=$PATH:/usr/local/bin
             echo "PATH updated to include Grype: $PATH"
 
       - run:
