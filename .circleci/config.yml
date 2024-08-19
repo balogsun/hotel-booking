@@ -30,10 +30,6 @@ jobs:
       - setup_remote_docker:
           version: default
       - run:
-          name: Docker login
-          command: |
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-      - run:
           name: Build hotel booking image
           command: docker build -t balogsen/hotel:v0 .
 
