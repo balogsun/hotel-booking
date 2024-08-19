@@ -42,12 +42,6 @@ jobs:
           name: Build hotel booking image
           command: docker build -t balogsen/hotel:v0 .
 
-      - run:
-          name: Push hotel booking image
-          command: |
-            docker push balogsen/hotel:v0
-            docker rmi balogsen/hotel:v0
-
   image_security_scan:
     executor: security
     steps:
@@ -57,8 +51,9 @@ jobs:
       - run:
           name: Scan Docker Image for Vulnerabilities
           command: |
-            docker pull balogsen/hotel:v0
             grype balogsen/hotel:v0
+            docker push balogsen/hotel:v0
+            docker rmi balogsen/hotel:v0
 
 workflows:
   version: 2
