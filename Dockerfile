@@ -1,6 +1,5 @@
 # Use Node.js LTS version as the base image
-#FROM node:lts-alpine
-FROM node:14
+FROM node:20-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -13,8 +12,8 @@ COPY package*.json ./
 RUN npm install
 
 # Copy the entire project files to the container
-COPY . /app/
-#COPY . .
+#COPY . /app/
+COPY . .
 
 # Build the Next.js application for production
 RUN npm run build
